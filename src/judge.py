@@ -1,11 +1,9 @@
 from typing import Union, List, Tuple
-from cases import Case, MalformedCase, type_enable_term_output
+from cases import Case, MalformedCase
 from dataclasses import dataclass
 import os
 import shutil
-import urllib.request
 import subprocess
-import json
 
 @dataclass
 class JudgeResult:
@@ -105,7 +103,6 @@ def test(path: str, case: Union[Case, MalformedCase]) -> JudgeResult:
     else: # output in terminal
         output_in_memory = output
 
-    expect_output_in_memory = open(case.expect_output, "r", encoding="utf-8").read()
-    if output_in_memory != expect_output_in_memory:
+    if output_in_memory != case.expect_output:
         return JudgeResult("test", False, "Output mismatch.\nOutput:\n" + log)
     return JudgeResult("test", True, log)
