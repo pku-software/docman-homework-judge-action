@@ -26,8 +26,8 @@ if __name__ == '__main__':
                         help="where citation for test cases comes from")
 
     args = parser.parse_args()
-    assert(os.path.isdir(args.input_dir) and os.path.isdir(args.citation_dir) 
-           and os.path.isfile(args.batch))
+    if args.citation_dir and args.input_dir:
+        assert(os.path.isdir(args.input_dir) and os.path.isdir(args.citation_dir))
 
     if args.log_file:
         logger = JsonLogger(args.log_file)
@@ -37,6 +37,7 @@ if __name__ == '__main__':
     generate_random_files(args.input_dir, args.citation_dir)
 
     if args.batch_file:
+        assert(os.path.isfile(args.batch))
         with open(args.batch_file, "r") as f:
             for line in f:
                 judge(line.strip(), args.input_dir, args.citation_dir, logger)
