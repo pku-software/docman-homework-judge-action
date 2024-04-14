@@ -26,8 +26,7 @@ if __name__ == '__main__':
                         help="where citation for test cases comes from")
 
     args = parser.parse_args()
-    if args.citation_dir and args.input_dir:
-        assert(os.path.isdir(args.input_dir) and os.path.isdir(args.citation_dir))
+    assert(os.path.isdir(args.input_dir) and os.path.isdir(args.citation_dir))
 
     if args.log_file:
         logger = JsonLogger(args.log_file)
