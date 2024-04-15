@@ -43,7 +43,7 @@ class MalformedCase:
 isbn_lists = ["9783161484101", "9780134448238", "9789929115231", "9781713159773",
               "9780134482381", "9780134482392", "9780134482395", "9780784133606"]
 # 5 random website
-website_lists = ["https://git-scm.com", "https://www.python.org", "https://json.nlohmann.me", 
+website_lists = ["https://git-scm.com", "https://pytorch.org", "https://json.nlohmann.me", 
                  "https://code.visualstudio.com", "https://www.jetbrains.com/clion"]
 
 # 3 random articles
@@ -212,7 +212,6 @@ def get_cases(input_dir: str, citation_dir: str) -> List[Union[Case, MalformedCa
         cases.append(Case(None, input_str, citation_path, output_path, expect_output, error))
         # -c citation_path -
         cases.append(Case(None, input_str, citation_path, None, expect_output, error))
-        print(citation_path)
 
     valid_input, valid_citation = os.path.join(input_dir, "1.txt"), os.path.join(citation_dir, "1.txt")
     invalid_input, invalid_citation = os.path.join(input_dir, "10086.txt"), os.path.join(citation_dir, "10086.txt")
@@ -251,7 +250,7 @@ def get_cases(input_dir: str, citation_dir: str) -> List[Union[Case, MalformedCa
     return cases
 
 if __name__ == "__main__":
-    # generate_random_files("./inputs", "./citations")
+    generate_random_files("./inputs", "./citations")
     cases = get_cases("./inputs", "./citations")
 
     for case in filter(lambda i : isinstance(i, Case), cases):

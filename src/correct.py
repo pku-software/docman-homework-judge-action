@@ -67,10 +67,10 @@ def citation_info_to_str(citation) -> Union[None, str]:
     if citation["type"] == "book":
         result = requests.get(API_ENDPOINT + "/isbn/" + urllib.parse.quote(citation["isbn"], safe=''))
         result = json.loads(result.content.decode())
-        if "authors" not in result or "title" not in result or\
+        if "author" not in result or "title" not in result or\
             "publisher" not in result or "year" not in result:
             return None
-        return "[%s] book: %s, %s, %s, %s" % (citation["id"], ', '.join(result["authors"]), 
+        return "[%s] book: %s, %s, %s, %s" % (citation["id"], result["author"], 
                                               result["title"], result["publisher"], result["year"])
     elif citation["type"] == "webpage":
         result = requests.get(API_ENDPOINT + "/title/" + urllib.parse.quote(citation["url"], safe=''))
