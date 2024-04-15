@@ -101,8 +101,28 @@ def test(path: str, case: Union[Case, MalformedCase]) -> JudgeResult:
             output_in_memory = f.read()
     else: # output in terminal
         output_in_memory = output.replace("\r\n", "\n")
+    case.expect_output = case.expect_output.removesuffix('\n')
     output_in_memory = output_in_memory.removesuffix('\n') # Don't consider trailing '\n'.
-
+    
     if output_in_memory != case.expect_output:
-        return JudgeResult("test", False, "Output mismatch.\nOutput:\n" + log)
+        to_end = True
+        for i in range(min(len(output_in_memory), len(case.expect_output))):
+            if output_in_memory[i] != case.expect_output[i]:
+                to_end = False
+                break
+
+        def get_char_or_eof(s, idx):
+            if to_end and idx + 1 == len(s):
+                return "<EOF>"
+            return s[idx]
+
+        correct, wrong = get_char_or_eof(case.expect_output, i), get_char_or_eof(output_in_memory, i)
+
+        with open(case.input_doc_path, 'r', encoding="utf-8") as input:
+            input_str = input.read()
+
+        return JudgeResult("test", False, f"Output mismatch.\nOutput:\n{log}\nExpect output:{case.expect_output}" +
+                           f"\nMismatch position:{str(i)}[near\"{output_in_memory[i-5:i+5]}\"] " + 
+                           f"expect {repr(correct)}, get {repr(wrong)}" +
+                           "\nInput: " + input_str)
     return JudgeResult("test", True, log)
