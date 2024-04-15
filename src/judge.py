@@ -94,8 +94,5 @@ def test(path: str, case: Union[Case, MalformedCase]) -> JudgeResult:
         output_in_memory = output.replace("\r\n", "\n").removesuffix('\n') # Don't consider trailing '\n'.
 
     if output_in_memory != case.expect_output:
-        for i in range(len(output_in_memory)):
-            if output_in_memory[i] != case.expect_output[i]:
-                print(f"[{i}] {output_in_memory[i]} != {case.expect_output[i]}, context = ", output_in_memory[i - 5: i + 5])
         return JudgeResult("test", False, "Output mismatch.\nOutput:\n" + log)
     return JudgeResult("test", True, log)
