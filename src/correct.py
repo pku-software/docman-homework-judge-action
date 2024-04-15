@@ -30,7 +30,8 @@ def check_bracket_match(article: str) -> Tuple[list, bool]:
 
 # Return ({id: citation}, success)
 def check_citation(citation_path: str) -> Tuple[Dict[str, dict], bool]:
-    citations = json.load(open(citation_path, "r"))
+    with open(citation_path, "r") as file:
+        citations = json.load(file)
     if "citations" not in citations:
         return ([], False)
     citations = citations["citations"]
@@ -68,6 +69,7 @@ def citation_info_to_str(citation) -> Union[None, str]:
 
     if citation["type"] == "book":
         result = requests.get(API_ENDPOINT + "/isbn/" + urllib.parse.quote(citation["isbn"], safe=''))
+        print(result.content)
         result = json.loads(result.content.decode())
         if "author" not in result or "title" not in result or\
             "publisher" not in result or "year" not in result:

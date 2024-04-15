@@ -101,8 +101,35 @@ def test(path: str, case: Union[Case, MalformedCase]) -> JudgeResult:
         with open(case.output, "r", encoding="utf-8") as f:
             output_in_memory = f.read()
     else: # output in terminal
-        output_in_memory = output
+        output_in_memory = output.replace("\r\n", "\n").removesuffix('\n') # Don't consider output.
 
     if output_in_memory != case.expect_output:
+        # with open(r"D:\Work\CS\C++\软设\中作业-试做\new\docman-homework-judge-action\output.txt", "a") as temp1, open(r"D:\Work\CS\C++\软设\中作业-试做\new\docman-homework-judge-action\expect.txt", "a") as temp2:
+        #     print(output_in_memory, file=temp1)
+        #     print(case.expect_output, file=temp2)
+
+        for i in range(len(output_in_memory)):
+            if output_in_memory[i] != case.expect_output[i]:
+                print(f"[{i}] {output_in_memory[i]} != {case.expect_output[i]}, context = ", output_in_memory[i - 5: i + 5])
         return JudgeResult("test", False, "Output mismatch.\nOutput:\n" + log)
     return JudgeResult("test", True, log)
+
+
+if __name__ == "__main__":
+    from log import TermLogger
+    from cases import get_cases, generate_random_files
+    import os
+
+    logger = TermLogger()
+    path = r"D:\Work\CS\C++\软设\中作业-试做\new\docman-ref-main\docman-ref-main"
+    input_cases_dir = "./inputs"
+    citation_dir = "./citations"
+
+    # generate_random_files("./inputs", "./citations")
+    cases = get_cases("./inputs", "./citations")
+
+    for case in cases:
+        def test0(p: str):
+            return test(p, case)
+        logger.exec_func(test0, path)
+    logger.end()

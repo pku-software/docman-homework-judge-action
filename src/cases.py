@@ -18,13 +18,13 @@ class Case:
     def generate_args(self) -> List[str]:
         args = ["-c", self.input_citation]
 
-        if self.output is None:
+        if self.output is not None:
             args.extend(["-o", self.output])
 
         # Only one of them should be None.
         assert((self.input_doc_path is None) != (self.input_str is None))
 
-        if self.input_doc_path is None:
+        if self.input_doc_path is not None:
             args.append(self.input_doc_path)
         else:
             args.append("-")
@@ -133,8 +133,10 @@ def generate_random_files(input_dir: str, citation_dir: str):
             final_input += content + '[' + citation_id + ']'
         final_input += get_random_str(random.randint(50, 100))
 
-        json.dump(final_citation_dict, open(os.path.join(citation_dir, str(offset + i) + ".txt"), "w"))
-        json.dump(final_input, open(os.path.join(input_dir, str(offset + i) + ".txt"), "w"))
+        with open(os.path.join(citation_dir, str(offset + i) + ".txt"), "w") as citefile,\
+             open(os.path.join(input_dir, str(offset + i) + ".txt"), "w") as inputfile:
+            json.dump(final_citation_dict, citefile)
+            json.dump(final_input, inputfile)
 
         # delete necessary keys.
         def del_mutate(key, suffix):
@@ -148,8 +150,10 @@ def generate_random_files(input_dir: str, citation_dir: str):
                 keys.remove("type") # They're already tested.
                 curr_dict.pop(random.choice(keys))
 
-            json.dump(new_dict, open(os.path.join(citation_dir, str(offset + i) + suffix + ".txt"), "w"))
-            json.dump(final_input, open(os.path.join(input_dir, str(offset + i) + suffix + ".txt"), "w"))
+            with open(os.path.join(citation_dir, str(offset + i) + suffix + ".txt"), "w") as citefile,\
+                 open(os.path.join(input_dir, str(offset + i) + suffix + ".txt"), "w") as inputfile:
+                json.dump(new_dict, citefile)
+                json.dump(final_input, inputfile)
 
         del_mutate("id", "_mut1")
         del_mutate("type", "_mut2")
@@ -167,8 +171,10 @@ def generate_random_files(input_dir: str, citation_dir: str):
             elif type(mutpos[key]) == int:
                 mutpos[key] = "You're fooled" if random.random() < 0.5 else {"You":"Great"} # mutate to str or dict
 
-            json.dump(new_dict, open(os.path.join(citation_dir, str(offset + i) + suffix + ".txt"), "w"))
-            json.dump(final_input, open(os.path.join(input_dir, str(offset + i) + suffix + ".txt"), "w"))
+            with open(os.path.join(citation_dir, str(offset + i) + suffix + ".txt"), "w") as citefile,\
+                 open(os.path.join(input_dir, str(offset + i) + suffix + ".txt"), "w") as inputfile:
+                json.dump(new_dict, citefile)
+                json.dump(final_input, inputfile)
 
         change_mutate(None, "_mut4")
         change_mutate("type", "_mut5") # mutate type to some wrong things...
@@ -178,8 +184,10 @@ def generate_random_files(input_dir: str, citation_dir: str):
             new_dict = deepcopy(final_citation_dict)
             del new_dict["citations"][random.randint(0, len(citation_ids) - 1)]
 
-            json.dump(new_dict, open(os.path.join(citation_dir, str(offset + i) + suffix + ".txt"), "w"))
-            json.dump(final_input, open(os.path.join(input_dir, str(offset + i) + suffix + ".txt"), "w"))
+            with open(os.path.join(citation_dir, str(offset + i) + suffix + ".txt"), "w") as citefile,\
+                 open(os.path.join(input_dir, str(offset + i) + suffix + ".txt"), "w") as inputfile:
+                json.dump(new_dict, citefile)
+                json.dump(final_input, inputfile)
         
         citation_wrong_mutate("_mut6")
 
@@ -189,8 +197,10 @@ def generate_random_files(input_dir: str, citation_dir: str):
             pos = random.randint(0, len(new_input))
             new_input = new_input[:pos] + '[' + new_input[pos:] # Add unmatched '['
 
-            json.dump(final_citation_dict, open(os.path.join(citation_dir, str(offset + i) + suffix + ".txt"), "w"))
-            json.dump(new_input, open(os.path.join(input_dir, str(offset + i) + suffix + ".txt"), "w"))
+            with open(os.path.join(citation_dir, str(offset + i) + suffix + ".txt"), "w") as citefile,\
+                 open(os.path.join(input_dir, str(offset + i) + suffix + ".txt"), "w") as inputfile:
+                json.dump(final_citation_dict, citefile)
+                json.dump(new_input, inputfile)
 
         input_wrong_mutate("_mut7")
 
@@ -203,7 +213,8 @@ def get_cases(input_dir: str, citation_dir: str) -> List[Union[Case, MalformedCa
         assert(filename.endswith(".txt") and os.path.isfile(input_path) and \
                os.path.isfile(citation_path))
         
-        input_str = open(input_path, "r").read()
+        with open(input_path, "r") as file:
+            input_str = file.read()
         output_path = "answer" + filename
         expect_output = transform_article(input_str, citation_path)
         expect_output, error = expect_output.result, not expect_output.success
@@ -254,7 +265,7 @@ def get_cases(input_dir: str, citation_dir: str) -> List[Union[Case, MalformedCa
     return cases
 
 if __name__ == "__main__":
-    generate_random_files("./inputs", "./citations")
+    # generate_random_files("./inputs", "./citations")
     cases = get_cases("./inputs", "./citations")
 
     for case in filter(lambda i : isinstance(i, Case), cases):
