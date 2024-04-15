@@ -40,6 +40,8 @@ def check_citation(citation_path: str) -> Tuple[Dict[str, dict], bool]:
     for citation in citations:
         if type(citation) != dict or "id" not in citation or "type" not in citation:
             return ([], False)
+        if type(citation["id"]) != str or type(citation["type"]) != str:
+            return ([], False)
         if citation["type"] == "book":
             if "isbn" not in citation or type(citation["isbn"]) != str:
                 return ([], False)
@@ -70,12 +72,16 @@ def citation_info_to_str(citation) -> Union[None, str]:
         if "author" not in result or "title" not in result or\
             "publisher" not in result or "year" not in result:
             return None
+        if type(result["author"]) != str or type(result["title"]) != str \
+           or type(result["publisher"]) != str or type(result["year"]) != str:
+            return None
+ 
         return "[%s] book: %s, %s, %s, %s" % (citation["id"], result["author"], 
                                               result["title"], result["publisher"], result["year"])
     elif citation["type"] == "webpage":
         result = requests.get(API_ENDPOINT + "/title/" + urllib.parse.quote(citation["url"], safe=''))
         result = json.loads(result.content.decode())
-        if "title" not in result:
+        if "title" not in result or type(result["title"]) != str:
             return None
         return "[%s] webpage: %s. Available at %s" % (citation["id"], result["title"], citation["url"])
     elif citation["type"] == "article":

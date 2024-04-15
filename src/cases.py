@@ -142,7 +142,11 @@ def generate_random_files(input_dir: str, citation_dir: str):
             if key is not None:
                 del new_dict["citations"][random.randint(0, len(citation_ids) - 1)][key]
             else:
-                new_dict.pop(random.choice(list(new_dict.keys())))
+                curr_dict = new_dict["citations"][random.randint(0, len(citation_ids) - 1)]
+                keys = list(curr_dict.keys())
+                keys.remove("id")
+                keys.remove("type") # They're already tested.
+                curr_dict.pop(random.choice(keys))
 
             json.dump(new_dict, open(os.path.join(citation_dir, str(offset + i) + suffix + ".txt"), "w"))
             json.dump(final_input, open(os.path.join(input_dir, str(offset + i) + suffix + ".txt"), "w"))
@@ -254,6 +258,8 @@ if __name__ == "__main__":
     cases = get_cases("./inputs", "./citations")
 
     for case in filter(lambda i : isinstance(i, Case), cases):
+        if case.input_doc_path is not None:
+            print(case.input_doc_path)
         if case.input_str is not None and case.output is not None:
             print(case.expect_output)
 
