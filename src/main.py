@@ -1,16 +1,15 @@
 import argparse
 from log import ILogger, TermLogger, JsonLogger
-from judge import prepare, build, test as test_by_case
+from judge import build, test as test_by_case
 from cases import get_cases, generate_random_files
 import os
 
 def judge(path: str, input_cases_dir: str, citation_dir: str, logger: ILogger):
-    if logger.exec_func(prepare, path):
-        if logger.exec_func(build, path):
-            for case in get_cases(input_cases_dir, citation_dir):
-                def test(p: str):
-                    return test_by_case(p, case)
-                logger.exec_func(test, path)
+    if logger.exec_func(build, path):
+        for case in get_cases(input_cases_dir, citation_dir):
+            def test(p: str):
+                return test_by_case(p, case)
+            logger.exec_func(test, path)
     logger.end()
 
 if __name__ == '__main__':

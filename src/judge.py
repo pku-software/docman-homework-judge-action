@@ -11,20 +11,6 @@ class JudgeResult:
     success: bool
     log: str
 
-def prepare(path: str) -> JudgeResult:
-    dirname = os.path.dirname(os.path.abspath(__file__))
-
-    # TODO: copy files
-
-    copies = [
-    ]
-    for file, dir in copies:
-        full_path = os.path.join(path, dir)
-        os.makedirs(full_path, exist_ok=True)
-        shutil.copy(os.path.join(dirname, "../dummy", file), full_path)
-
-    return JudgeResult("prepare", True, "")
-
 def build(path: str) -> JudgeResult:
     os.chdir(path)
     if not os.path.exists("CMakeLists.txt"):
@@ -101,35 +87,11 @@ def test(path: str, case: Union[Case, MalformedCase]) -> JudgeResult:
         with open(case.output, "r", encoding="utf-8") as f:
             output_in_memory = f.read()
     else: # output in terminal
-        output_in_memory = output.replace("\r\n", "\n").removesuffix('\n') # Don't consider output.
+        output_in_memory = output.replace("\r\n", "\n").removesuffix('\n') # Don't consider trailing '\n'.
 
     if output_in_memory != case.expect_output:
-        # with open(r"D:\Work\CS\C++\软设\中作业-试做\new\docman-homework-judge-action\output.txt", "a") as temp1, open(r"D:\Work\CS\C++\软设\中作业-试做\new\docman-homework-judge-action\expect.txt", "a") as temp2:
-        #     print(output_in_memory, file=temp1)
-        #     print(case.expect_output, file=temp2)
-
         for i in range(len(output_in_memory)):
             if output_in_memory[i] != case.expect_output[i]:
                 print(f"[{i}] {output_in_memory[i]} != {case.expect_output[i]}, context = ", output_in_memory[i - 5: i + 5])
         return JudgeResult("test", False, "Output mismatch.\nOutput:\n" + log)
     return JudgeResult("test", True, log)
-
-
-if __name__ == "__main__":
-    from log import TermLogger
-    from cases import get_cases, generate_random_files
-    import os
-
-    logger = TermLogger()
-    path = r"D:\Work\CS\C++\软设\中作业-试做\new\docman-ref-main\docman-ref-main"
-    input_cases_dir = "./inputs"
-    citation_dir = "./citations"
-
-    # generate_random_files("./inputs", "./citations")
-    cases = get_cases("./inputs", "./citations")
-
-    for case in cases:
-        def test0(p: str):
-            return test(p, case)
-        logger.exec_func(test0, path)
-    logger.end()
