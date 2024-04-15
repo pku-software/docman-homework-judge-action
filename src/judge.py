@@ -80,7 +80,7 @@ def test(path: str, case: Union[Case, MalformedCase]) -> JudgeResult:
         else:
             return JudgeResult("test", True, "Failed as expected. Output:\n" + log)
     args = case.generate_args()
-    output, code, log, timeout = run_exe(exe_path, args, case.input_str, error=case.error)
+    output, code, log, timeout = run_exe(exe_path, args, case.input_str)
     if timeout:
         return JudgeResult("test", False, "Case timeout. Output:\n"+ log)
     if case.should_error():
