@@ -69,7 +69,6 @@ def citation_info_to_str(citation) -> Union[None, str]:
 
     if citation["type"] == "book":
         result = requests.get(API_ENDPOINT + "/isbn/" + urllib.parse.quote(citation["isbn"], safe=''))
-        print(result.content)
         result = json.loads(result.content.decode())
         if "author" not in result or "title" not in result or\
             "publisher" not in result or "year" not in result:
