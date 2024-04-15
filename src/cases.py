@@ -9,7 +9,7 @@ from copy import deepcopy
 @dataclass
 class Case:
     input_doc_path: Union[None, str]
-    input_str: Union[None, str]
+    need_redirect: bool
     input_citation: str
     output: Union[None, str]
     expect_output: Union[None, str]
@@ -21,10 +21,7 @@ class Case:
         if self.output is not None:
             args.extend(["-o", self.output])
 
-        # Only one of them should be None.
-        assert((self.input_doc_path is None) != (self.input_str is None))
-
-        if self.input_doc_path is not None:
+        if not self.need_redirect:
             args.append(self.input_doc_path)
         else:
             args.append("-")
@@ -220,33 +217,33 @@ def get_cases(input_dir: str, citation_dir: str) -> List[Union[Case, MalformedCa
         expect_output, error = expect_output.result, not expect_output.success
 
         # -c citation_path -o output_path input_file
-        cases.append(Case(input_path, None, citation_path, output_path, expect_output, error))
+        cases.append(Case(input_path, False, citation_path, output_path, expect_output, error))
         # -c citation_path input_file
-        cases.append(Case(input_path, None, citation_path, None, expect_output, error))
+        cases.append(Case(input_path, False, citation_path, None, expect_output, error))
         # -c citation_path -o output_path -
-        cases.append(Case(None, input_str, citation_path, output_path, expect_output, error))
+        cases.append(Case(input_path, True, citation_path, output_path, expect_output, error))
         # -c citation_path -
-        cases.append(Case(None, input_str, citation_path, None, expect_output, error))
+        cases.append(Case(input_path, True, citation_path, None, expect_output, error))
 
     valid_input, valid_citation = os.path.join(input_dir, "1.txt"), os.path.join(citation_dir, "1.txt")
     invalid_input, invalid_citation = os.path.join(input_dir, "10086.txt"), os.path.join(citation_dir, "10086.txt")
 
     # Input paths not exist:
     cases.extend([
-        Case(invalid_input, None, valid_citation, None, None, True),
-        Case(invalid_input, None, valid_citation, "non-exist.txt", None, True)
+        Case(invalid_input, False, valid_citation, None, None, True),
+        Case(invalid_input, False, valid_citation, "non-exist.txt", None, True)
     ])
 
     # Citation paths not exist:
     cases.extend([
-        Case(valid_input, None, invalid_citation, None, None, True),
-        Case(valid_input, None, invalid_citation, "non-exist.txt", None, True)
+        Case(valid_input, False, invalid_citation, None, None, True),
+        Case(valid_input, False, invalid_citation, "non-exist.txt", None, True)
     ])
 
     # Both paths not exist
     cases.extend([
-        Case(invalid_input, None, invalid_citation, None, None, True),
-        Case(invalid_input, None, invalid_citation, "non-exist.txt", None, True)
+        Case(invalid_input, False, invalid_citation, None, None, True),
+        Case(invalid_input, False, invalid_citation, "non-exist.txt", None, True)
     ])
 
     # Then malformed ones...

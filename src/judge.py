@@ -34,18 +34,27 @@ def build(path: str) -> JudgeResult:
 
     return JudgeResult("build", True, output)
 
-def run_exe(path: str, args: List[str], stdin_str: Union[None, str] = None) -> Tuple[str, int, str, bool]:
+def run_exe(path: str, args: List[str], rediect_input: Union[None, str]) -> Tuple[str, int, str, bool]:
     args = [path] + args
-    proc = subprocess.Popen(args, stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE)
+    if rediect_input is None:
+        proc = subprocess.Popen(args, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
+    else:
+        file = open(rediect_input, 'r')
+        proc = subprocess.Popen(args, stdin=file, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
+    
     timeout = False
     try: # timeout if 60 seconds passed without ending the process.
-        stdout, stderr = proc.communicate(stdin_str.encode(errors="ignore") if stdin_str is not None else None, 60)
+        stdout, stderr = proc.communicate(timeout=60)
     except subprocess.TimeoutExpired:
         timeout = True
         proc.kill()
         stdout, stderr = proc.communicate()
-
+       
+    if rediect_input is not None: 
+        file.close()
+    
     exit_code = proc.returncode
     stdout = stdout.decode(errors="ignore")
     stderr = stderr.decode(errors="ignore")
@@ -58,7 +67,7 @@ def test(path: str, case: Union[Case, MalformedCase]) -> JudgeResult:
     if not os.path.exists(exe_path):
         return JudgeResult("pretest", False, "Output executable file docman does not exist.")
     if isinstance(case, MalformedCase):
-        _, code, log, timeout = run_exe(exe_path, case.args) # Malformed ones shouldn't accept any input...
+        _, code, log, timeout = run_exe(exe_path, case.args, None) # Malformed ones shouldn't accept any input...
         if timeout:
             return JudgeResult("test", False, "Case timeout. Output:\n" + log)
         if code == 0:
@@ -68,7 +77,7 @@ def test(path: str, case: Union[Case, MalformedCase]) -> JudgeResult:
         else:
             return JudgeResult("test", False, "Error code should be 1 when failed. Output:\n" + log)
     args = case.generate_args()
-    output, code, log, timeout = run_exe(exe_path, args, case.input_str)
+    output, code, log, timeout = run_exe(exe_path, args, case.input_doc_path if case.need_redirect else None)
     if timeout:
         return JudgeResult("test", False, "Case timeout. Output:\n"+ log)
     if case.should_error():
@@ -91,7 +100,8 @@ def test(path: str, case: Union[Case, MalformedCase]) -> JudgeResult:
         with open(case.output, "r", encoding="utf-8") as f:
             output_in_memory = f.read()
     else: # output in terminal
-        output_in_memory = output.replace("\r\n", "\n").removesuffix('\n') # Don't consider trailing '\n'.
+        output_in_memory = output.replace("\r\n", "\n")
+    output_in_memory = output_in_memory.removesuffix('\n') # Don't consider trailing '\n'.
 
     if output_in_memory != case.expect_output:
         return JudgeResult("test", False, "Output mismatch.\nOutput:\n" + log)
