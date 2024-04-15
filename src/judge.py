@@ -63,8 +63,10 @@ def test(path: str, case: Union[Case, MalformedCase]) -> JudgeResult:
             return JudgeResult("test", False, "Case timeout. Output:\n" + log)
         if code == 0:
             return JudgeResult("test", False, "Malformed case should not pass. Output:\n" + log)
-        else:
+        elif code == 1:
             return JudgeResult("test", True, "Failed as expected. Output:\n" + log)
+        else:
+            return JudgeResult("test", False, "Error code should be 1 when failed. Output:\n" + log)
     args = case.generate_args()
     output, code, log, timeout = run_exe(exe_path, args, case.input_str)
     if timeout:
@@ -74,8 +76,10 @@ def test(path: str, case: Union[Case, MalformedCase]) -> JudgeResult:
             return JudgeResult("test", False, "Case should error but passed. Output:\n" + log)
         elif case.output is not None and os.path.exists(case.output):
             return JudgeResult("test", False, "Case should error, but output file created. Output:\n" + log)
-        else:
+        elif code == 1:
             return JudgeResult("test", True, "Failed as expected. Output:\n" + log)
+        else:
+            return JudgeResult("test", False, "Error code should be 1 when failed. Output:\n" + log)
     else: # Should pass...
         if code != 0:
             return JudgeResult("test", False, "Case should pass but failed. Output:\n" + log)
