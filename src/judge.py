@@ -27,30 +27,20 @@ def prepare(path: str) -> JudgeResult:
 
 def build(path: str) -> JudgeResult:
     os.chdir(path)
-    if os.path.exists("xmake.lua"):
-        build_system = 0
-    elif os.path.exists("CMakeLists.txt"):
-        build_system = 1
-    else:
+    if not os.path.exists("CMakeLists.txt"):
         return JudgeResult("pre-configure", False, "No build system found.")
 
-    config_commands = [
-        "xmake f -y" + (" -pmingw" if os.name == "nt" else ""),
-        "cmake -B ./build" + (" -G \"MinGW Makefiles\"" if os.name == "nt" else "")
-    ]
+    config_command = "cmake -B ./build" + (" -G \"MinGW Makefiles\"" if os.name == "nt" else "")
     cfg_r = subprocess.run(
-        config_commands[build_system], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        config_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     output = cfg_r.stdout.decode(errors="ignore") + \
         cfg_r.stderr.decode(errors="ignore")
     if cfg_r.returncode != 0:
         return JudgeResult("configure", False, output)
 
-    build_commands = [
-        "xmake b -y",
-        "cmake --build ./build"
-    ]
+    build_command = "cmake --build ./build"
     build_r = subprocess.run(
-        build_commands[build_system], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        build_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     output += build_r.stdout.decode(errors="ignore") + \
         build_r.stderr.decode(errors="ignore")
     if build_r.returncode != 0:
@@ -58,31 +48,41 @@ def build(path: str) -> JudgeResult:
 
     return JudgeResult("build", True, output)
 
-
-def run_exe(path: str, args: List[str], stdin_str: Union[None, str] = None, error: bool = False) -> Tuple[str, int, str]:
+def run_exe(path: str, args: List[str], stdin_str: Union[None, str] = None) -> Tuple[str, int, str, bool]:
     args = [path] + args
     proc = subprocess.Popen(args, stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
-    stdout, stderr = proc.communicate(stdin_str.encode(errors="ignore") if stdin_str is not None else None)
+    timeout = False
+    try: # timeout if 60 seconds passed without ending the process.
+        stdout, stderr = proc.communicate(stdin_str.encode(errors="ignore") if stdin_str is not None else None, 60)
+    except subprocess.TimeoutExpired:
+        timeout = True
+        proc.kill()
+        stdout, stderr = proc.communicate()
+
     exit_code = proc.returncode
     stdout = stdout.decode(errors="ignore")
     stderr = stderr.decode(errors="ignore")
-    return stdout, exit_code, ' '.join(args) + '\n' + stdout + '\n' + stderr
+    return stdout, exit_code, ' '.join(args) + '\n' + stdout + '\n' + stderr, timeout
 
 def test(path: str, case: Union[Case, MalformedCase]) -> JudgeResult:
     os.chdir(path)
     exe_path = os.path.join(
-        path, "bin", "docman.exe" if os.name == "nt" else "docman")
+        path, "build", "docman.exe" if os.name == "nt" else "docman")
     if not os.path.exists(exe_path):
         return JudgeResult("pretest", False, "Output executable file docman does not exist.")
     if isinstance(case, MalformedCase):
-        _, code, log = run_exe(exe_path, case.args) # Malformed ones shouldn't accept any input...
+        _, code, log, timeout = run_exe(exe_path, case.args) # Malformed ones shouldn't accept any input...
+        if timeout:
+            return JudgeResult("test", False, "Case timeout. Output:\n" + log)
         if code == 0:
             return JudgeResult("test", False, "Malformed case should not pass. Output:\n" + log)
         else:
             return JudgeResult("test", True, "Failed as expected. Output:\n" + log)
     args = case.generate_args()
-    output, code, log = run_exe(exe_path, args, case.input_str, error=case.error)
+    output, code, log, timeout = run_exe(exe_path, args, case.input_str, error=case.error)
+    if timeout:
+        return JudgeResult("test", False, "Case timeout. Output:\n"+ log)
     if case.should_error():
         if code == 0:
             return JudgeResult("test", False, "Case should error but passed. Output:\n" + log)
