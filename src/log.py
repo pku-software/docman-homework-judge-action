@@ -31,9 +31,9 @@ class TermLogger(ILogger):
     def exec_func(self, func: Callable[[str], JudgeResult], ws_path: str) -> bool:
         result = wrap_exception(func)(ws_path)
         if result.success:
-            print(result.title, "\033[1;32m", "OK", "\033[0m")
+            print(result.title, "\033[1;32m", "OK", "\033[0m", flush=True)
         else:
-            print(result.title, "\033[1;31m", "Failed", "\033[0m")
+            print(result.title, "\033[1;31m", "Failed", "\033[0m", flush=True)
             print(result.log)
             self.has_failed = True
         return result.success
