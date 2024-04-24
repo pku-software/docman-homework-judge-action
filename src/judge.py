@@ -106,13 +106,14 @@ def test(path: str, case: Union[Case, MalformedCase]) -> JudgeResult:
     
     if output_in_memory != case.expect_output:
         to_end = True
+        i = 0
         for i in range(min(len(output_in_memory), len(case.expect_output))):
             if output_in_memory[i] != case.expect_output[i]:
                 to_end = False
                 break
 
         def get_char_or_eof(s, idx):
-            if to_end and idx + 1 == len(s):
+            if to_end and idx + 1 >= len(s):
                 return "<EOF>"
             return s[idx]
 
