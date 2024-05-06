@@ -17,5 +17,5 @@ runs:
     - run: |
           python -m pip install --upgrade pip
           pip install -r ${{ github.action_path }}/requirements.txt
-          python ${{ github.action_path }}/src/main.py --input_dir ${{ github.action_path }}/inputs --citation_dir ${{ github.action_path }}/citations ${{ github.workspace }}
+          python ${{ github.action_path }}/src/main.py --input_dir ${{ github.action_path }}/inputs --citation_dir ${{ github.action_path }}/citations --batch ${{ github.workspace }}/batch.txt
       shell: bash

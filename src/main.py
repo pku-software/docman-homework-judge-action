@@ -36,10 +36,11 @@ if __name__ == '__main__':
     generate_random_files(args.input_dir, args.citation_dir)
 
     if args.batch_file:
-        assert(os.path.isfile(args.batch))
+        assert(os.path.isfile(args.batch_file))
+        root_dir = os.path.dirname(args.batch_file)
         with open(args.batch_file, "r") as f:
             for line in f:
-                judge(line.strip(), args.input_dir, args.citation_dir, logger)
+                judge(os.path.join(root_dir, line.strip()), args.input_dir, args.citation_dir, logger)
     else:
         for arg in args.workspaces:
             judge(arg, args.input_dir, args.citation_dir, logger)
