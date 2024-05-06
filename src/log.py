@@ -42,6 +42,16 @@ class TermLogger(ILogger):
         if self.has_failed:
             exit(1)
 
+class BriefLogger(ILogger):
+    def __init__(self) -> None:
+        return
+
+    def exec_func(self, func: Callable[[str], JudgeResult], ws_path: str) -> bool:
+        result = wrap_exception(func)(ws_path)
+        return result.success
+
+    def end(self) -> None:
+        return # Don't exit...
 
 class JsonLogger(ILogger):
     def __init__(self, json_path: str) -> None:

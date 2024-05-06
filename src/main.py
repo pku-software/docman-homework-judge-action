@@ -1,5 +1,5 @@
 import argparse
-from log import ILogger, TermLogger, JsonLogger
+from log import ILogger, TermLogger, BriefLogger, JsonLogger
 from judge import build, test as test_by_case
 from cases import get_cases, generate_random_files
 from tqdm import tqdm
@@ -7,10 +7,13 @@ import os
 
 def judge(path: str, input_cases_dir: str, citation_dir: str, logger: ILogger):
     if logger.exec_func(build, path):
+        success, total = 0, 0
         for case in tqdm(get_cases(input_cases_dir, citation_dir)):
             def test(p: str):
                 return test_by_case(p, case)
-            logger.exec_func(test, path)
+            success += logger.exec_func(test, path)
+            total += 1
+    print(f"Judge result: {path} - {success}/{total}")
     logger.end()
 
 if __name__ == '__main__':
@@ -19,9 +22,9 @@ if __name__ == '__main__':
     parser.add_argument('workspaces', nargs='*', help='workspace path')
     parser.add_argument('--batch', dest='batch_file',
                         help='a file containing a list of workspace paths')
-    parser.add_argument('--log', dest='log_file',
-                        help='a file to save the judge result')
     parser.add_argument("--input_dir", help="where test cases comes from")
+    parser.add_argument("--brief", dest="use_brief",
+                        help="use brief logger")
     parser.add_argument("--citation_dir", 
                         help="where citation for test cases comes from")
 
@@ -30,6 +33,8 @@ if __name__ == '__main__':
 
     if args.log_file:
         logger = JsonLogger(args.log_file)
+    elif args.use_brief:
+        logger = BriefLogger()
     else:
         logger = TermLogger()
 
