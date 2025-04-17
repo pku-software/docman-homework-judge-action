@@ -1,17 +1,20 @@
-from dataclasses import dataclass
-from typing import Union, List
-from correct import transform_article
-import os
-import random, string
 import json
+import os
+import random
+import string
 from copy import deepcopy
+from dataclasses import dataclass
+from pathlib import Path
+from typing import List, Union
+
+from docman_judge.correct import transform_article
 
 
 @dataclass
 class Case:
-    input_doc_path: Union[None, str]
+    input_doc_path: Union[None, Path]
     need_redirect: bool
-    input_citation: str
+    input_citation: Path
     output: Union[None, str]
     expect_output: Union[None, str]
     error: bool
@@ -93,9 +96,7 @@ article_lists = [
 ]
 
 
-def get_random_str(
-    size, chars=string.ascii_letters + string.digits + string.punctuation + " \n\t"
-) -> str:
+def get_random_str(size, chars=string.ascii_letters + string.digits + string.punctuation + " \n\t") -> str:
     chars = chars.replace("[", "").replace("]", "")  # remove special characters...
     return "".join(random.choices(chars, k=size))
 
@@ -113,9 +114,7 @@ def get_random_json() -> dict:
     determined_id = "unique_since_too_long"
     # id length is from 1 to 20.
     ids = [
-        get_random_str(
-            random.randint(1, len(determined_id)), string.ascii_letters + string.digits
-        )
+        get_random_str(random.randint(1, len(determined_id)), string.ascii_letters + string.digits)
         for _ in range(book_num + website_num + 10)  # +10 to prevent non-unique
     ]
 
@@ -130,9 +129,7 @@ def get_random_json() -> dict:
         result["citations"].append({"id": ids[i], "type": "book", "isbn": books[i]})
 
     for i in range(website_num):
-        result["citations"].append(
-            {"id": ids[book_num + i], "type": "webpage", "url": websites[i]}
-        )
+        result["citations"].append({"id": ids[book_num + i], "type": "webpage", "url": websites[i]})
 
     result["citations"] += article_lists
 
@@ -140,7 +137,7 @@ def get_random_json() -> dict:
     return result
 
 
-def generate_random_files(input_dir: str, citation_dir: str):
+def generate_random_files(input_dir: Path, citation_dir: Path) -> None:
     offset = 10  # File name count from 10.
     for i in range(3):
         # Generate 3 correct files
@@ -153,11 +150,10 @@ def generate_random_files(input_dir: str, citation_dir: str):
             final_input += content + "[" + citation_id + "]"
         final_input += get_random_str(random.randint(50, 100))
 
-        with open(
-            os.path.join(citation_dir, str(offset + i) + ".txt"), "w"
-        ) as citefile, open(
-            os.path.join(input_dir, str(offset + i) + ".txt"), "w"
-        ) as inputfile:
+        with (
+            open(citation_dir / f"{offset + i}.txt", "w") as citefile,
+            open(input_dir / f"{offset + i}.txt", "w") as inputfile,
+        ):
             json.dump(final_citation_dict, citefile)
             json.dump(final_input, inputfile)
 
@@ -167,19 +163,16 @@ def generate_random_files(input_dir: str, citation_dir: str):
             if key is not None:
                 del new_dict["citations"][random.randint(0, len(citation_ids) - 1)][key]
             else:
-                curr_dict = new_dict["citations"][
-                    random.randint(0, len(citation_ids) - 1)
-                ]
+                curr_dict = new_dict["citations"][random.randint(0, len(citation_ids) - 1)]
                 keys = list(curr_dict.keys())
                 keys.remove("id")
                 keys.remove("type")  # They're already tested.
                 curr_dict.pop(random.choice(keys))
 
-            with open(
-                os.path.join(citation_dir, str(offset + i) + suffix + ".txt"), "w"
-            ) as citefile, open(
-                os.path.join(input_dir, str(offset + i) + suffix + ".txt"), "w"
-            ) as inputfile:
+            with (
+                open(citation_dir / f"{offset + i}{suffix}.txt", "w") as citefile,
+                open(input_dir / f"{offset + i}{suffix}.txt", "w") as inputfile,
+            ):
                 json.dump(new_dict, citefile)
                 json.dump(final_input, inputfile)
 
@@ -194,20 +187,15 @@ def generate_random_files(input_dir: str, citation_dir: str):
 
             if key is None:
                 key = random.choice(list(mutpos.keys()))
-            if type(mutpos[key]) == str:
-                mutpos[key] = (
-                    1 if random.random() < 0.5 else [1, 2, 3]
-                )  # mutate to int or list
-            elif type(mutpos[key]) == int:
-                mutpos[key] = (
-                    "You're fooled" if random.random() < 0.5 else {"You": "Great"}
-                )  # mutate to str or dict
+            if type(mutpos[key]) is str:
+                mutpos[key] = 1 if random.random() < 0.5 else [1, 2, 3]  # mutate to int or list
+            elif type(mutpos[key]) is int:
+                mutpos[key] = "You're fooled" if random.random() < 0.5 else {"You": "Great"}  # mutate to str or dict
 
-            with open(
-                os.path.join(citation_dir, str(offset + i) + suffix + ".txt"), "w"
-            ) as citefile, open(
-                os.path.join(input_dir, str(offset + i) + suffix + ".txt"), "w"
-            ) as inputfile:
+            with (
+                open(citation_dir / f"{offset + i}{suffix}.txt", "w") as citefile,
+                open(input_dir / f"{offset + i}{suffix}.txt", "w") as inputfile,
+            ):
                 json.dump(new_dict, citefile)
                 json.dump(final_input, inputfile)
 
@@ -219,11 +207,10 @@ def generate_random_files(input_dir: str, citation_dir: str):
             new_dict = deepcopy(final_citation_dict)
             del new_dict["citations"][random.randint(0, len(citation_ids) - 1)]
 
-            with open(
-                os.path.join(citation_dir, str(offset + i) + suffix + ".txt"), "w"
-            ) as citefile, open(
-                os.path.join(input_dir, str(offset + i) + suffix + ".txt"), "w"
-            ) as inputfile:
+            with (
+                open(citation_dir / f"{offset + i}{suffix}.txt", "w") as citefile,
+                open(input_dir / f"{offset + i}{suffix}.txt", "w") as inputfile,
+            ):
                 json.dump(new_dict, citefile)
                 json.dump(final_input, inputfile)
 
@@ -235,56 +222,49 @@ def generate_random_files(input_dir: str, citation_dir: str):
             pos = random.randint(0, len(new_input))
             new_input = new_input[:pos] + "[" + new_input[pos:]  # Add unmatched '['
 
-            with open(
-                os.path.join(citation_dir, str(offset + i) + suffix + ".txt"), "w"
-            ) as citefile, open(
-                os.path.join(input_dir, str(offset + i) + suffix + ".txt"), "w"
-            ) as inputfile:
+            with (
+                open(citation_dir / f"{offset + i}{suffix}.txt", "w") as citefile,
+                open(input_dir / f"{offset + i}{suffix}.txt", "w") as inputfile,
+            ):
                 json.dump(final_citation_dict, citefile)
                 json.dump(new_input, inputfile)
 
         input_wrong_mutate("_mut7")
 
 
-def get_cases(input_dir: str, citation_dir: str) -> List[Union[Case, MalformedCase]]:
-    input_dir, citation_dir = os.path.abspath(input_dir), os.path.abspath(citation_dir)
+def get_cases(input_dir: Path, citation_dir: Path, output_dir: Path) -> List[Union[Case, MalformedCase]]:
     cases = []
 
     for filename in os.listdir(input_dir):
-        input_path, citation_path = os.path.join(input_dir, filename), os.path.join(
-            citation_dir, filename
+        input_path, citation_path = (
+            input_dir / filename,
+            citation_dir / filename,
         )
-        assert (
-            filename.endswith(".txt")
-            and os.path.isfile(input_path)
-            and os.path.isfile(citation_path)
-        )
+        assert filename.endswith(".txt") and input_path.is_file() and citation_path.is_file()
 
         with open(input_path, "r") as file:
             input_str = file.read()
-        output_path = "answer" + filename
+        output_path = output_dir / f"answer{filename}"
         expect_output = transform_article(input_str, citation_path)
         expect_output, error = expect_output.result, not expect_output.success
 
         # -c citation_path -o output_path input_file
-        cases.append(
-            Case(input_path, False, citation_path, output_path, expect_output, error)
-        )
+        cases.append(Case(input_path, False, citation_path, output_path, expect_output, error))
         # -c citation_path input_file
         cases.append(Case(input_path, False, citation_path, None, expect_output, error))
         # -c citation_path -o output_path -
-        cases.append(
-            Case(input_path, True, citation_path, output_path, expect_output, error)
-        )
+        cases.append(Case(input_path, True, citation_path, output_path, expect_output, error))
         # -c citation_path -
         cases.append(Case(input_path, True, citation_path, None, expect_output, error))
 
-    valid_input, valid_citation = os.path.join(input_dir, "1.txt"), os.path.join(
-        citation_dir, "1.txt"
+    valid_input, valid_citation = (
+        input_dir / "1.txt",
+        citation_dir / "1.txt",
     )
-    invalid_input, invalid_citation = os.path.join(
-        input_dir, "10086.txt"
-    ), os.path.join(citation_dir, "10086.txt")
+    invalid_input, invalid_citation = (
+        input_dir / "10086.txt",
+        citation_dir / "10086.txt",
+    )
 
     # Input paths not exist:
     cases.extend(
@@ -326,17 +306,3 @@ def get_cases(input_dir: str, citation_dir: str) -> List[Union[Case, MalformedCa
     )
 
     return cases
-
-
-if __name__ == "__main__":
-    # generate_random_files("./inputs", "./citations")
-    cases = get_cases("./inputs", "./citations")
-
-    for case in filter(lambda i: isinstance(i, Case), cases):
-        if case.input_doc_path is not None:
-            print(case.input_doc_path)
-        if case.input_str is not None and case.output is not None:
-            print(case.expect_output)
-
-    # article = "The book [1] is a great book. The article [3] is also a classic. View [2] for more info."
-    # citation_path = "./citations/1.txt"

@@ -1,8 +1,11 @@
-from typing import Callable, List
 import abc
-from judge import JudgeResult
 import json
 import os
+from typing import Callable, List
+
+from termcolor import colored
+
+from docman_judge.judge import JudgeResult
 
 
 class ILogger(metaclass=abc.ABCMeta):
@@ -21,6 +24,7 @@ def wrap_exception(func: Callable[[str], JudgeResult]):
             return func(path)
         except Exception as e:
             return JudgeResult(func.__name__, False, str(e))
+
     return wrapped
 
 
@@ -31,9 +35,9 @@ class TermLogger(ILogger):
     def exec_func(self, func: Callable[[str], JudgeResult], ws_path: str) -> bool:
         result = wrap_exception(func)(ws_path)
         if result.success:
-            print(result.title, "\033[1;32m", "OK", "\033[0m", flush=True)
+            print(f"[{result.title}]", colored("OK", "green"), flush=True)
         else:
-            print(result.title, "\033[1;31m", "Failed", "\033[0m", flush=True)
+            print(f"[{result.title}]", colored("Failed", "red"), flush=True)
             print(result.log)
             self.has_failed = True
         return result.success
@@ -56,6 +60,5 @@ class JsonLogger(ILogger):
 
     def end(self) -> None:
         with open(self.json_path, "a") as f:
-            f.write(json.dumps(
-                [result.__dict__ for result in self.results]) + "\n")
+            f.write(json.dumps([result.__dict__ for result in self.results]) + "\n")
         self.results = []
