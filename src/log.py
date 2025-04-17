@@ -3,6 +3,7 @@ import abc
 from judge import JudgeResult
 import json
 import os
+from termcolor import colored
 
 
 class ILogger(metaclass=abc.ABCMeta):
@@ -32,9 +33,9 @@ class TermLogger(ILogger):
     def exec_func(self, func: Callable[[str], JudgeResult], ws_path: str) -> bool:
         result = wrap_exception(func)(ws_path)
         if result.success:
-            print(result.title, "\033[1;32m", "OK", "\033[0m", flush=True)
+            print(result.title, colored("OK", "green"), flush=True)
         else:
-            print(result.title, "\033[1;31m", "Failed", "\033[0m", flush=True)
+            print(result.title, colored("Failed", "red"), flush=True)
             print(result.log)
             self.has_failed = True
         return result.success

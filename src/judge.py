@@ -3,6 +3,7 @@ from cases import Case, MalformedCase
 from dataclasses import dataclass
 import os
 import subprocess
+from termcolor import colored
 
 
 @dataclass
@@ -69,6 +70,10 @@ def run_exe(
     return stdout, exit_code, " ".join(args) + "\n" + stdout + "\n" + stderr, timeout
 
 
+def format_log_message(reason: str, log: str) -> str:
+    return f"{colored(reason, 'blue')}\n{colored('Output', 'yellow')}:\n{log}"
+
+
 def test(path: str, case: Union[Case, MalformedCase]) -> JudgeResult:
     os.chdir(path)
     exe_path = os.path.join(
@@ -83,51 +88,79 @@ def test(path: str, case: Union[Case, MalformedCase]) -> JudgeResult:
             exe_path, case.args, None
         )  # Malformed ones shouldn't accept any input...
         if timeout:
-            return JudgeResult("test", False, "Case timeout. Output:\n" + log)
+            return JudgeResult(
+                "test",
+                False,
+                format_log_message("Case timeout.", log),
+            )
         if code == 0:
             return JudgeResult(
-                "test", False, "Malformed case should not pass. Output:\n" + log
+                "test",
+                False,
+                format_log_message("Malformed case should not pass.", log),
             )
         elif code == 1:
-            return JudgeResult("test", True, "Failed as expected. Output:\n" + log)
+            return JudgeResult(
+                "test",
+                True,
+                format_log_message("Failed as expected.", log),
+            )
         else:
             return JudgeResult(
-                "test", False, "Error code should be 1 when failed. Output:\n" + log
+                "test",
+                False,
+                format_log_message("Error code should be 1 when failed.", log),
             )
     args = case.generate_args()
     output, code, log, timeout = run_exe(
         exe_path, args, case.input_doc_path if case.need_redirect else None
     )
     if timeout:
-        return JudgeResult("test", False, "Case timeout. Output:\n" + log)
+        return JudgeResult(
+            "test",
+            False,
+            format_log_message("Case timeout.", log),
+        )
     if case.should_error():
         if code == 0:
             return JudgeResult(
-                "test", False, "Case should error but passed. Output:\n" + log
+                "test",
+                False,
+                format_log_message("Case should error but passed.", log),
             )
         elif case.output is not None and os.path.exists(case.output):
             return JudgeResult(
                 "test",
                 False,
-                "Case should error, but output file created. Output:\n" + log,
+                format_log_message("Case should error, but output file created.", log),
             )
         elif code == 1:
-            return JudgeResult("test", True, "Failed as expected. Output:\n" + log)
+            return JudgeResult(
+                "test",
+                True,
+                format_log_message("Failed as expected.", log),
+            )
         else:
             return JudgeResult(
-                "test", False, "Error code should be 1 when failed. Output:\n" + log
+                "test",
+                False,
+                format_log_message("Error code should be 1 when failed.", log),
             )
     else:  # Should pass...
         if code != 0:
             return JudgeResult(
-                "test", False, "Case should pass but failed. Output:\n" + log
+                "test",
+                False,
+                format_log_message("Case should pass but failed.", log),
             )
     # Normally passed, check output.
     output_in_memory = ""
     if case.output is not None:
         if not os.path.exists(case.output):
             return JudgeResult(
-                "test", False, "Output file does not exist.\nOutput:\n" + log
+                "test",
+                False,
+                format_log_message("Output file does not exist.", log),
             )
         with open(case.output, "r", encoding="utf-8") as f:
             output_in_memory = f.read()
@@ -159,13 +192,12 @@ def test(path: str, case: Union[Case, MalformedCase]) -> JudgeResult:
         with open(case.input_doc_path, "r", encoding="utf-8") as input:
             input_str = input.read()
 
-        return JudgeResult(
-            "test",
-            False,
-            f"Output mismatch.\nOutput:\n{log}\nExpect output:{case.expect_output}"
-            + f'\nMismatch position:{str(i)}[near"{output_in_memory[i - 5 : i + 5]}"] '
-            + f"expect {repr(correct)}, get {repr(wrong)}"
-            + "\nInput: "
-            + input_str,
-        )
+        msg = f"{colored('Output mismatch.', 'blue')}\n"
+        f"{colored('Output', 'yellow')}:\n{log}\n"
+        f"{colored('Expect output', 'yellow')}:\n{case.expect_output}\n"
+        f"{colored('Mismatch position', 'yellow')}: {i} [near{output_in_memory[i - 5 : i + 5]}]"
+        f" expect {repr(correct)}, get {repr(wrong)}\n"
+        f"{colored('Input', 'yellow')}:\n{input_str}"
+
+        return JudgeResult("test", False, msg)
     return JudgeResult("test", True, log)
