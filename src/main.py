@@ -2,13 +2,21 @@ import argparse
 from log import ILogger, TermLogger, JsonLogger
 from judge import build, test as test_by_case
 from cases import get_cases, generate_random_files
-from tqdm import tqdm
 import os
+import time
 
 
 def judge(path: str, input_cases_dir: str, citation_dir: str, logger: ILogger):
     if logger.exec_func(build, path):
-        for case in tqdm(get_cases(input_cases_dir, citation_dir)):
+        cases = get_cases(input_cases_dir, citation_dir)
+        num_cases = len(cases)
+
+        time_start = time.time()
+        for i, case in enumerate(cases):
+            print(
+                f"Testing {i + 1}/{num_cases} "
+                f"[time escaped: {time.time() - time_start:.2f}s]..."
+            )
 
             def test(p: str):
                 return test_by_case(p, case)
