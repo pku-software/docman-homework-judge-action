@@ -10,12 +10,11 @@ repos:
     hooks:
       - id: ruff
         types_or: [python, pyi]
-        args: [--fix]
+        args: [--fix, --config=pyproject.toml]
       - id: ruff-format
         types_or: [python, pyi]
 
 exclude: |
   (?x)(
-    ^citations/|
-    ^inputs/
+    ^docman_judge/data/|
   )

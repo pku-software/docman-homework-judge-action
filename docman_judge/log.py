@@ -1,9 +1,11 @@
-from typing import Callable, List
 import abc
-from judge import JudgeResult
 import json
 import os
+from typing import Callable, List
+
 from termcolor import colored
+
+from docman_judge.judge import JudgeResult
 
 
 class ILogger(metaclass=abc.ABCMeta):

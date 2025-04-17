@@ -1,12 +1,11 @@
 import json
 import re
-from dataclasses import dataclass
-from typing import Union, Tuple, Dict
-import urllib.parse
-import urllib.request
-import urllib.response
-import requests
 import urllib
+import urllib.parse
+from dataclasses import dataclass
+from typing import Dict, Tuple, Union
+
+import requests
 
 
 @dataclass
