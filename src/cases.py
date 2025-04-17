@@ -2,7 +2,8 @@ from dataclasses import dataclass
 from typing import Union, List
 from correct import transform_article
 import os
-import random, string
+import random
+import string
 import json
 from copy import deepcopy
 
@@ -153,11 +154,10 @@ def generate_random_files(input_dir: str, citation_dir: str):
             final_input += content + "[" + citation_id + "]"
         final_input += get_random_str(random.randint(50, 100))
 
-        with open(
-            os.path.join(citation_dir, str(offset + i) + ".txt"), "w"
-        ) as citefile, open(
-            os.path.join(input_dir, str(offset + i) + ".txt"), "w"
-        ) as inputfile:
+        with (
+            open(os.path.join(citation_dir, str(offset + i) + ".txt"), "w") as citefile,
+            open(os.path.join(input_dir, str(offset + i) + ".txt"), "w") as inputfile,
+        ):
             json.dump(final_citation_dict, citefile)
             json.dump(final_input, inputfile)
 
@@ -175,11 +175,14 @@ def generate_random_files(input_dir: str, citation_dir: str):
                 keys.remove("type")  # They're already tested.
                 curr_dict.pop(random.choice(keys))
 
-            with open(
-                os.path.join(citation_dir, str(offset + i) + suffix + ".txt"), "w"
-            ) as citefile, open(
-                os.path.join(input_dir, str(offset + i) + suffix + ".txt"), "w"
-            ) as inputfile:
+            with (
+                open(
+                    os.path.join(citation_dir, str(offset + i) + suffix + ".txt"), "w"
+                ) as citefile,
+                open(
+                    os.path.join(input_dir, str(offset + i) + suffix + ".txt"), "w"
+                ) as inputfile,
+            ):
                 json.dump(new_dict, citefile)
                 json.dump(final_input, inputfile)
 
@@ -194,20 +197,23 @@ def generate_random_files(input_dir: str, citation_dir: str):
 
             if key is None:
                 key = random.choice(list(mutpos.keys()))
-            if type(mutpos[key]) == str:
+            if type(mutpos[key]) is str:
                 mutpos[key] = (
                     1 if random.random() < 0.5 else [1, 2, 3]
                 )  # mutate to int or list
-            elif type(mutpos[key]) == int:
+            elif type(mutpos[key]) is int:
                 mutpos[key] = (
                     "You're fooled" if random.random() < 0.5 else {"You": "Great"}
                 )  # mutate to str or dict
 
-            with open(
-                os.path.join(citation_dir, str(offset + i) + suffix + ".txt"), "w"
-            ) as citefile, open(
-                os.path.join(input_dir, str(offset + i) + suffix + ".txt"), "w"
-            ) as inputfile:
+            with (
+                open(
+                    os.path.join(citation_dir, str(offset + i) + suffix + ".txt"), "w"
+                ) as citefile,
+                open(
+                    os.path.join(input_dir, str(offset + i) + suffix + ".txt"), "w"
+                ) as inputfile,
+            ):
                 json.dump(new_dict, citefile)
                 json.dump(final_input, inputfile)
 
@@ -219,11 +225,14 @@ def generate_random_files(input_dir: str, citation_dir: str):
             new_dict = deepcopy(final_citation_dict)
             del new_dict["citations"][random.randint(0, len(citation_ids) - 1)]
 
-            with open(
-                os.path.join(citation_dir, str(offset + i) + suffix + ".txt"), "w"
-            ) as citefile, open(
-                os.path.join(input_dir, str(offset + i) + suffix + ".txt"), "w"
-            ) as inputfile:
+            with (
+                open(
+                    os.path.join(citation_dir, str(offset + i) + suffix + ".txt"), "w"
+                ) as citefile,
+                open(
+                    os.path.join(input_dir, str(offset + i) + suffix + ".txt"), "w"
+                ) as inputfile,
+            ):
                 json.dump(new_dict, citefile)
                 json.dump(final_input, inputfile)
 
@@ -235,11 +244,14 @@ def generate_random_files(input_dir: str, citation_dir: str):
             pos = random.randint(0, len(new_input))
             new_input = new_input[:pos] + "[" + new_input[pos:]  # Add unmatched '['
 
-            with open(
-                os.path.join(citation_dir, str(offset + i) + suffix + ".txt"), "w"
-            ) as citefile, open(
-                os.path.join(input_dir, str(offset + i) + suffix + ".txt"), "w"
-            ) as inputfile:
+            with (
+                open(
+                    os.path.join(citation_dir, str(offset + i) + suffix + ".txt"), "w"
+                ) as citefile,
+                open(
+                    os.path.join(input_dir, str(offset + i) + suffix + ".txt"), "w"
+                ) as inputfile,
+            ):
                 json.dump(final_citation_dict, citefile)
                 json.dump(new_input, inputfile)
 
@@ -251,8 +263,9 @@ def get_cases(input_dir: str, citation_dir: str) -> List[Union[Case, MalformedCa
     cases = []
 
     for filename in os.listdir(input_dir):
-        input_path, citation_path = os.path.join(input_dir, filename), os.path.join(
-            citation_dir, filename
+        input_path, citation_path = (
+            os.path.join(input_dir, filename),
+            os.path.join(citation_dir, filename),
         )
         assert (
             filename.endswith(".txt")
@@ -279,12 +292,14 @@ def get_cases(input_dir: str, citation_dir: str) -> List[Union[Case, MalformedCa
         # -c citation_path -
         cases.append(Case(input_path, True, citation_path, None, expect_output, error))
 
-    valid_input, valid_citation = os.path.join(input_dir, "1.txt"), os.path.join(
-        citation_dir, "1.txt"
+    valid_input, valid_citation = (
+        os.path.join(input_dir, "1.txt"),
+        os.path.join(citation_dir, "1.txt"),
     )
-    invalid_input, invalid_citation = os.path.join(
-        input_dir, "10086.txt"
-    ), os.path.join(citation_dir, "10086.txt")
+    invalid_input, invalid_citation = (
+        os.path.join(input_dir, "10086.txt"),
+        os.path.join(citation_dir, "10086.txt"),
+    )
 
     # Input paths not exist:
     cases.extend(

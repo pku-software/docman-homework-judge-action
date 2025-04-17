@@ -21,6 +21,7 @@ def wrap_exception(func: Callable[[str], JudgeResult]):
             return func(path)
         except Exception as e:
             return JudgeResult(func.__name__, False, str(e))
+
     return wrapped
 
 
@@ -56,6 +57,5 @@ class JsonLogger(ILogger):
 
     def end(self) -> None:
         with open(self.json_path, "a") as f:
-            f.write(json.dumps(
-                [result.__dict__ for result in self.results]) + "\n")
+            f.write(json.dumps([result.__dict__ for result in self.results]) + "\n")
         self.results = []
