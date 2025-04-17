@@ -65,7 +65,7 @@ def check_citation(citation_path: str) -> Tuple[Dict[str, dict], bool]:
     return ({citation["id"]:citation for citation in citations}, True)
 
 def citation_info_to_str(citation) -> Union[None, str]:
-    API_ENDPOINT = "http://docman.lcpu.dev"
+    API_ENDPOINT = "http://docman.zhuof.wang"
 
     if citation["type"] == "book":
         result = requests.get(API_ENDPOINT + "/isbn/" + urllib.parse.quote(citation["isbn"], safe=''))
