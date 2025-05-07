@@ -56,7 +56,7 @@ isbn_lists = [
 website_lists = [
     "https://git-scm.com",
     "https://pytorch.org",
-    "https://json.nlohmann.me",
+    "https://www.xinhuanet.com",
     "https://code.visualstudio.com",
     "https://www.jetbrains.com/clion",
 ]
