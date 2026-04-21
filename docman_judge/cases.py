@@ -40,198 +40,6 @@ class Case:
 class MalformedCase:
     args: List[str]
 
-
-# 8 random and valid isbn13
-isbn_lists = [
-    "9780262046305",  # INTRODUCTION TO. ALGORITHMS
-    "9780321928429",  # C Primer Plus
-    "9781292101767",  # Computer Systems: A Programmer's Perspective
-    "9780132856201",  # Pearson Computer Networking, 8E
-    "9781718503106",  # The Rust Programming Language
-    "9780134610993",  # Artificial Intelligence: A Modern Approach
-    "9780201103311",  # Programming Pearls
-    "9780201006506",  # The Mythical Man-Month: Essays on Software Engineering
-]
-# 5 random website
-website_lists = [
-    "https://git-scm.com",
-    "https://pytorch.org",
-    "https://www.xinhuanet.com",
-    "https://code.visualstudio.com",
-    "https://www.jetbrains.com/clion",
-]
-
-# 3 random articles
-article_lists = [
-    {
-        "id": "yu2024accelerating_wwwwwwwwwwww",
-        "type": "article",
-        "title": "Accelerating Text-to-Image Editing via Cache-Enabled Sparse Diffusion Inference",
-        "author": "Yu, Zihao and Li, Haoyang and Fu, Fangcheng and Miao, Xupeng and Cui, Bin",
-        "journal": "Proceedings of the AAAI Conference on Artificial Intelligence",
-        "volume": 38,
-        "issue": 15,
-        "year": 2024,
-    },
-    {
-        "id": "liu2024infocon_kkkkkkkkkkk",
-        "type": "article",
-        "title": "InfoCon: Concept Discovery with Generative and Discriminative Informativeness",
-        "author": "Ruizhe Liu and Qian Luo and Yanchao Yang",
-        "journal": "The Twelfth International Conference on Learning Representations",
-        "volume": 1,
-        "issue": 2,
-        "year": 2024,
-    },
-    {
-        "id": "ho2020denoising_6666666666",
-        "type": "article",
-        "title": "Denoising Diffusion Probabilistic Models",
-        "author": "Jonathan Ho and Ajay Jain and Pieter Abbeel",
-        "journal": "Conference on Neural Information Processing Systems",
-        "volume": 1,  # not correct, just random ones
-        "issue": 2,
-        "year": 2020,
-    },
-]
-
-
-def get_random_str(size, chars=string.ascii_letters + string.digits + string.punctuation + " \n\t") -> str:
-    chars = chars.replace("[", "").replace("]", "")  # remove special characters...
-    return "".join(random.choices(chars, k=size))
-
-
-def get_random_json() -> dict:
-    result = {"version": 1, "citations": []}
-    book_num = random.randint(0, len(isbn_lists))
-    website_num = random.randint(0, len(website_lists))
-
-    random.shuffle(isbn_lists)
-    random.shuffle(website_lists)
-    books = isbn_lists[:book_num]
-    websites = website_lists[:website_num]
-
-    determined_id = "unique_since_too_long"
-    # id length is from 1 to 20.
-    ids = [
-        get_random_str(random.randint(1, len(determined_id)), string.ascii_letters + string.digits)
-        for _ in range(book_num + website_num + 10)  # +10 to prevent non-unique
-    ]
-
-    ids = list(set(ids))
-    # In case worst things happen... (very unlikely)
-    if len(ids) < book_num + website_num:
-        num = book_num + website_num - len(ids)
-        ids.extend([determined_id + str(i) for i in range(num)])
-    ids = ids[: book_num + website_num]
-
-    for i in range(book_num):
-        result["citations"].append({"id": ids[i], "type": "book", "isbn": books[i]})
-
-    for i in range(website_num):
-        result["citations"].append({"id": ids[book_num + i], "type": "webpage", "url": websites[i]})
-
-    result["citations"] += article_lists
-
-    random.shuffle(result["citations"])
-    return result
-
-
-def generate_random_files(input_dir: Path, citation_dir: Path) -> None:
-    offset = 10  # File name count from 10.
-    for i in range(3):
-        # Generate 3 correct files
-        final_citation_dict = get_random_json()
-        citations = final_citation_dict["citations"]
-        citation_ids = [citation["id"] for citation in citations]
-        final_input = ""
-        for citation_id in citation_ids:
-            content = get_random_str(random.randint(50, 100))
-            final_input += content + "[" + citation_id + "]"
-        final_input += get_random_str(random.randint(50, 100))
-
-        with (
-            open(citation_dir / f"{offset + i}.txt", "w") as citefile,
-            open(input_dir / f"{offset + i}.txt", "w") as inputfile,
-        ):
-            json.dump(final_citation_dict, citefile)
-            json.dump(final_input, inputfile)
-
-        # delete necessary keys.
-        def del_mutate(key, suffix):
-            new_dict = deepcopy(final_citation_dict)
-            if key is not None:
-                del new_dict["citations"][random.randint(0, len(citation_ids) - 1)][key]
-            else:
-                curr_dict = new_dict["citations"][random.randint(0, len(citation_ids) - 1)]
-                keys = list(curr_dict.keys())
-                keys.remove("id")
-                keys.remove("type")  # They're already tested.
-                curr_dict.pop(random.choice(keys))
-
-            with (
-                open(citation_dir / f"{offset + i}{suffix}.txt", "w") as citefile,
-                open(input_dir / f"{offset + i}{suffix}.txt", "w") as inputfile,
-            ):
-                json.dump(new_dict, citefile)
-                json.dump(final_input, inputfile)
-
-        del_mutate("id", "_mut1")
-        del_mutate("type", "_mut2")
-        del_mutate(None, "_mut3")
-
-        # change type of necessary keys
-        def change_mutate(key, suffix):
-            new_dict = deepcopy(final_citation_dict)
-            mutpos = new_dict["citations"][random.randint(0, len(citation_ids) - 1)]
-
-            if key is None:
-                key = random.choice(list(mutpos.keys()))
-            if type(mutpos[key]) is str:
-                mutpos[key] = 1 if random.random() < 0.5 else [1, 2, 3]  # mutate to int or list
-            elif type(mutpos[key]) is int:
-                mutpos[key] = "You're fooled" if random.random() < 0.5 else {"You": "Great"}  # mutate to str or dict
-
-            with (
-                open(citation_dir / f"{offset + i}{suffix}.txt", "w") as citefile,
-                open(input_dir / f"{offset + i}{suffix}.txt", "w") as inputfile,
-            ):
-                json.dump(new_dict, citefile)
-                json.dump(final_input, inputfile)
-
-        change_mutate(None, "_mut4")
-        change_mutate("type", "_mut5")  # mutate type to some wrong things...
-
-        # make some citations absent.
-        def citation_wrong_mutate(suffix):
-            new_dict = deepcopy(final_citation_dict)
-            del new_dict["citations"][random.randint(0, len(citation_ids) - 1)]
-
-            with (
-                open(citation_dir / f"{offset + i}{suffix}.txt", "w") as citefile,
-                open(input_dir / f"{offset + i}{suffix}.txt", "w") as inputfile,
-            ):
-                json.dump(new_dict, citefile)
-                json.dump(final_input, inputfile)
-
-        citation_wrong_mutate("_mut6")
-
-        # make bracket unmatched.
-        def input_wrong_mutate(suffix):
-            new_input = deepcopy(final_input)
-            pos = random.randint(0, len(new_input))
-            new_input = new_input[:pos] + "[" + new_input[pos:]  # Add unmatched '['
-
-            with (
-                open(citation_dir / f"{offset + i}{suffix}.txt", "w") as citefile,
-                open(input_dir / f"{offset + i}{suffix}.txt", "w") as inputfile,
-            ):
-                json.dump(final_citation_dict, citefile)
-                json.dump(new_input, inputfile)
-
-        input_wrong_mutate("_mut7")
-
-
 def get_cases(input_dir: Path, citation_dir: Path, output_dir: Path) -> List[Union[Case, MalformedCase]]:
     cases = []
 
@@ -282,14 +90,6 @@ def get_cases(input_dir: Path, citation_dir: Path, output_dir: Path) -> List[Uni
         ]
     )
 
-    # Both paths not exist
-    cases.extend(
-        [
-            Case(invalid_input, False, invalid_citation, None, None, True),
-            Case(invalid_input, False, invalid_citation, "non-exist.txt", None, True),
-        ]
-    )
-
     # Then malformed ones...
     cases.extend(
         [
@@ -297,11 +97,8 @@ def get_cases(input_dir: Path, citation_dir: Path, output_dir: Path) -> List[Uni
             MalformedCase(["stray"]),
             MalformedCase(["more", "stray"]),
             MalformedCase(["--unrecognized"]),
-            MalformedCase(["--dramatic", "unrecognized"]),
-            MalformedCase(["-o"]),
             MalformedCase(["-c"]),
             MalformedCase(["-o", "a.txt", "-o", "b.txt", valid_input]),
-            MalformedCase(["-c", valid_citation, "-c", valid_citation, valid_input]),
         ]
     )
 

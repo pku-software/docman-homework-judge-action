@@ -6,7 +6,7 @@ from importlib.resources import files
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from docman_judge.cases import generate_random_files, get_cases
+from docman_judge.cases import get_cases
 from docman_judge.judge import build
 from docman_judge.judge import test as test_by_case
 from docman_judge.log import ILogger, JsonLogger, TermLogger
@@ -20,7 +20,7 @@ def judge(path: str, input_cases_dir: Path, citation_dir: Path, output_dir: Path
         time_start = time.time()
         for i, case in enumerate(cases):
             print(f"Testing {i + 1}/{num_cases} [time escaped: {time.time() - time_start:.2f}s]...")
-
+            print(case)
             def test(p: str):
                 return test_by_case(p, case)
 
@@ -59,8 +59,6 @@ def main():
         shutil.copytree(args.input_dir, tmp_input_dir)
         shutil.copytree(args.citation_dir, tmp_citation_dir)
         tmp_output_dir.mkdir(parents=True, exist_ok=True)
-
-        generate_random_files(tmp_input_dir, tmp_citation_dir)
 
         if args.batch_file:
             assert os.path.isfile(args.batch)

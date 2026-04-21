@@ -108,13 +108,13 @@ def test(path: str, case: Union[Case, MalformedCase]) -> JudgeResult:
             return JudgeResult(
                 "test",
                 False,
-                format_log_message("Case should error but passed.", log),
+                format_log_message("Case should error with return value 1 but passed with return value 0.", log),
             )
         elif case.output is not None and os.path.exists(case.output):
             return JudgeResult(
                 "test",
                 False,
-                format_log_message("Case should error, but output file created.", log),
+                format_log_message("Case should error with return value 1, but output file is created.", log),
             )
         elif code == 1:
             return JudgeResult(
@@ -133,7 +133,7 @@ def test(path: str, case: Union[Case, MalformedCase]) -> JudgeResult:
             return JudgeResult(
                 "test",
                 False,
-                format_log_message("Case should pass but failed.", log),
+                format_log_message("Case should pass with return value 0 but failed.", log),
             )
     # Normally passed, check output.
     output_in_memory = ""

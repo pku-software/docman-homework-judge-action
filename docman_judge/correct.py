@@ -29,7 +29,6 @@ def check_bracket_match(article: str) -> Tuple[list, bool]:
         return ([], False)
     return (ref_pair, True)
 
-
 # Return ({id: citation}, success)
 def check_citation(citation_path: str) -> Tuple[Dict[str, dict], bool]:
     with open(citation_path, "r") as file:
