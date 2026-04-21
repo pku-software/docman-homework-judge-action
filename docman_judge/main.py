@@ -20,7 +20,7 @@ def judge(path: str, input_cases_dir: Path, citation_dir: Path, output_dir: Path
         time_start = time.time()
         for i, case in enumerate(cases):
             print(f"Testing {i + 1}/{num_cases} [time escaped: {time.time() - time_start:.2f}s]...")
-            print(case)
+
             def test(p: str):
                 return test_by_case(p, case)
 
